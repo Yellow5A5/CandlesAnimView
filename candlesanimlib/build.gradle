@@ -1,11 +1,10 @@
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
 
     defaultConfig {
-        applicationId "com.yellow5a5.candlesanim"
         minSdkVersion 14
         targetSdkVersion 23
         versionCode 1
