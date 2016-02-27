@@ -81,7 +81,8 @@ public class CandlesAnimView extends View {
         mFirCandle.initCandle(mFirCandleWidth, mFirCandleHeight);
         mFirCandle.initAnim();
         mSecCandle = new SecCandle(mRelativeX + mWidth / 2, mRelativeY + mHeight);
-        mSecCandle.initCandle(mSecCandleWidth, mSecCandleHeight - 50);
+        mSecCandle.initCandle(mSecCandleWidth, mSecCandleHeight - 80);
+        mSecCandle.initAnim();
 
         mFlame = new Flame(0,100);
         mFlame.initConfig(50,100);

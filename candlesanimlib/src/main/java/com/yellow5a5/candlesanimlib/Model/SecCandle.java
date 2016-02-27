@@ -9,7 +9,7 @@ import android.graphics.Point;
 /**
  * Created by Weiwu on 16/2/24.
  */
-public class SecCandle extends ICandle{
+public class SecCandle extends ICandle {
 
 
     private Paint mPaint;
@@ -49,7 +49,7 @@ public class SecCandle extends ICandle{
         //两个蜡烛中心横坐标
         mCenterX = mCurX + mCandleWidth / 2;
         //眼睛半径
-        mEyeRadius = mCandleWidth / 12;
+        mEyeRadius = 10;
         //眼睛间隔距离
         mEyeDevide = mCandleWidth / 3;
         //眼睛坐标
@@ -59,20 +59,52 @@ public class SecCandle extends ICandle{
         mEyeRPoint.y = mEyeLPoint.y;
 
         mMouthPoint.x = mCenterX;
-        mMouthPoint.y = mCurY - mCandleHeight /10 * 8;
-        mMouthRadius = mCandleHeight / 10;
+        mMouthPoint.y = mCurY - mCandleHeight / 10 * 8;
+
+        mCandlewickPoint.x = mCenterX;
+        mCandlewickPoint.y = mCurY - mCandleHeight;
     }
 
     @Override
     public void initAnim() {
         super.initAnim();
-        mCandlesAnimator = ValueAnimator.ofFloat(0,4).setDuration(3000);
+        mCandlesAnimator = ValueAnimator.ofFloat(0, 4).setDuration(3000);
         mCandlesAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
+                float zeroToOne = (float) animation.getAnimatedValue();
+                if (zeroToOne > 3.0f) {
+                    zeroToOne = (zeroToOne - 3.0f);
 
+                    if (zeroToOne <= 0.5f) {
+                        zeroToOne = 2 * zeroToOne;//0-1
+                        mMouthPoint.x = (int) (mCenterX - 30 * zeroToOne);
+                    } else {
+                        zeroToOne = (2 - 2 * zeroToOne);//1-0
+                    }
+                    int offsetX = (int) (30 * zeroToOne);
+                    mCandleWidth = (int) (mPreWidth + 30 * zeroToOne);
+                    mCandleHeight = (int) (mPreHeight + 30 * zeroToOne);
+                    mMouthRadius = (int) (20 * zeroToOne);
+                    refreshPosition(offsetX);
+                }
             }
         });
+        mCandlesAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        mCandlesAnimator.start();
+    }
+
+    private void refreshPosition(int offset) {
+        //眼睛间隔距离
+        mEyeDevide = mCandleWidth / 3;
+        //眼睛坐标
+        mEyeLPoint.x = mCurX + mEyeDevide - offset;
+        mEyeLPoint.y = mCurY - mCandleHeight / 10 * 9;
+        mEyeRPoint.x = mCurX + mEyeDevide * 2 - offset;
+        mEyeRPoint.y = mEyeLPoint.y;
+
+        mMouthPoint.y = mCurY - mCandleHeight / 10 * 8;
+        mCandlewickPoint.y = mCurY - mCandleHeight;
     }
 
     @Override
@@ -95,6 +127,6 @@ public class SecCandle extends ICandle{
         canvas.drawRect(mCenterX - mCandleWidth / 2, mCurY - mCandleHeight, mCenterX + mCandleWidth / 2, mCurY, mPaint);
 
         //绘制蜡烛芯
-        canvas.drawLine(mCenterX, mCurY - mCandleHeight, mCenterX, mCurY - mCandleHeight - 50, mPaint);
+        canvas.drawLine(mCandlewickPoint.x, mCandlewickPoint.y, mCandlewickPoint.x, mCandlewickPoint.y - 50, mPaint);
     }
 }

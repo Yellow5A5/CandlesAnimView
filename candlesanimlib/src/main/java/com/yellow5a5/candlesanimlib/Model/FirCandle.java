@@ -1,7 +1,5 @@
 package com.yellow5a5.candlesanimlib.Model;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -49,7 +47,7 @@ public class FirCandle extends ICandle {
         mCenterX = mCurX + mCandleWidth / 2;
 
         //眼睛半径
-        mEyeRadius = mCandleWidth / 12;
+        mEyeRadius = 10;
         //眼睛间隔距离
         mEyeDevide = mCandleWidth / 3;
         //眼睛坐标
@@ -57,6 +55,9 @@ public class FirCandle extends ICandle {
         mEyeLPoint.y = mCurY - mCandleHeight / 4 * 3;
         mEyeRPoint.x = mCurX + mEyeDevide * 2;
         mEyeRPoint.y = mEyeLPoint.y;
+
+        mCandlewickPoint.x = mCenterX;
+        mCandlewickPoint.y = mCurY - mCandleHeight;
     }
 
     @Override
@@ -71,7 +72,7 @@ public class FirCandle extends ICandle {
                     mIsFire = true;
                     mCandleWidth = mPreWidth + (int) (zeroToOne * 40);
                     mCandleHeight = mPreHeight - (int) (zeroToOne * 30);
-                    setEyePosition();
+                    refreshEyePosition();
                     //蜡烛芯下拉
                     mCandlewickDegrees = (int) (180 * zeroToOne);
                 } else if (zeroToOne <= 2.0f) {
@@ -81,12 +82,12 @@ public class FirCandle extends ICandle {
                         mIsFire = false;
                         mCandleWidth = mPreWidth + (int) (zeroToOne * 40);
                         mCandleHeight = mPreHeight - (int) (zeroToOne * 30);
-                        setEyePosition();
+                        refreshEyePosition();
                         mCandlewickDegrees = (int) (180 * zeroToOne);
                     } else {
                         mCandleWidth = mPreWidth;
                         mCandleHeight = mPreHeight;
-                        setEyePosition();
+                        refreshEyePosition();
                         mCandlewickDegrees = 0;
                     }
                 }
@@ -133,14 +134,15 @@ public class FirCandle extends ICandle {
         //绘制蜡烛芯
         canvas.save();
         canvas.rotate(mCandlewickDegrees, mCenterX, mCurY - mCandleHeight);
-        canvas.drawLine(mCenterX, mCurY - mCandleHeight, mCenterX, mCurY - mCandleHeight - 50, mPaint);
+        canvas.drawLine(mCandlewickPoint.x, mCandlewickPoint.y, mCandlewickPoint.x, mCandlewickPoint.y - 50, mPaint);
         canvas.restore();
     }
 
 
-    private void setEyePosition() {
+    private void refreshEyePosition() {
         mEyeDevide = mCandleWidth / 3;
         mEyeLPoint.y = mCurY - mCandleHeight / 4 * 3;
         mEyeRPoint.y = mEyeLPoint.y;
+        mCandlewickPoint.y = mCurY - mCandleHeight;
     }
 }
