@@ -3,6 +3,7 @@ package com.yellow5a5.candlesanimlib.Model;
 import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.EmbossMaskFilter;
 import android.graphics.Paint;
 import android.graphics.Point;
 
@@ -40,7 +41,7 @@ public class SecCandle extends ICandle {
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
-        mPaint.setStrokeWidth(5 * 3);
+        mPaint.setStrokeWidth(15);
         mEyeLPoint = new Point();
         mEyeRPoint = new Point();
         mCandlewickPoint = new Point();
@@ -73,13 +74,15 @@ public class SecCandle extends ICandle {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float zeroToOne = (float) animation.getAnimatedValue();
-                if (zeroToOne > 3.0f) {
-                    zeroToOne = (zeroToOne - 3.0f);
+                if (zeroToOne >= 2.0f) {
+                    zeroToOne = (zeroToOne - 2.0f) / 2;
 
                     if (zeroToOne <= 0.5f) {
                         zeroToOne = 2 * zeroToOne;//0-1
-                        mMouthPoint.x = (int) (mCenterX - 30 * zeroToOne);
-                    } else {
+                        mMouthPoint.x = (int) (mCenterX - 20 * zeroToOne);
+                    } else if (zeroToOne <= 0.75f) {
+                        return;
+                    } else if (zeroToOne <= 1.0f) {
                         zeroToOne = (2 - 2 * zeroToOne);//1-0
                     }
                     int offsetX = (int) (30 * zeroToOne);
@@ -127,6 +130,6 @@ public class SecCandle extends ICandle {
         canvas.drawRect(mCenterX - mCandleWidth / 2, mCurY - mCandleHeight, mCenterX + mCandleWidth / 2, mCurY, mPaint);
 
         //绘制蜡烛芯
-        canvas.drawLine(mCandlewickPoint.x, mCandlewickPoint.y, mCandlewickPoint.x, mCandlewickPoint.y - 50, mPaint);
+        canvas.drawLine(mCandlewickPoint.x, mCandlewickPoint.y, mCandlewickPoint.x, mCandlewickPoint.y - 30, mPaint);
     }
 }

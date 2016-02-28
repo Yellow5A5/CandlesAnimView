@@ -1,10 +1,13 @@
 package com.yellow5a5.candlesanimlib.Model;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.util.Log;
 
 /**
  * Created by Weiwu on 16/2/24.
@@ -22,6 +25,7 @@ public class FirCandle extends ICandle {
     //蜡烛芯旋转角
     private int mCandlewickDegrees = 0;
 
+    private Flame mFlame;
     private boolean mIsFire = false;
 
     private ValueAnimator mCandlesAnimator;
@@ -58,6 +62,10 @@ public class FirCandle extends ICandle {
 
         mCandlewickPoint.x = mCenterX;
         mCandlewickPoint.y = mCurY - mCandleHeight;
+
+        mFlame = new Flame(mCandlewickPoint.x - 25, mCandlewickPoint.y - 30);
+        mFlame.initConfig(50, 100);
+        mFlame.initAnim();
     }
 
     @Override
@@ -74,7 +82,7 @@ public class FirCandle extends ICandle {
                     mCandleHeight = mPreHeight - (int) (zeroToOne * 30);
                     refreshEyePosition();
                     //蜡烛芯下拉
-                    mCandlewickDegrees = (int) (180 * zeroToOne);
+                    mCandlewickDegrees = (int) (- 60 + (180 + 60) * zeroToOne);
                 } else if (zeroToOne <= 2.0f) {
                     zeroToOne = zeroToOne - 1.0f;
                     if (zeroToOne <= 0.2f) {
@@ -82,19 +90,28 @@ public class FirCandle extends ICandle {
                         mIsFire = false;
                         mCandleWidth = mPreWidth + (int) (zeroToOne * 40);
                         mCandleHeight = mPreHeight - (int) (zeroToOne * 30);
-                        refreshEyePosition();
                         mCandlewickDegrees = (int) (180 * zeroToOne);
                     } else {
                         mCandleWidth = mPreWidth;
                         mCandleHeight = mPreHeight;
-                        refreshEyePosition();
                         mCandlewickDegrees = 0;
                     }
+                    refreshEyePosition();
+                } else if (zeroToOne >= 3.5f) {
+                    zeroToOne = 2 * (zeroToOne - 3.5f);//0-1
+                    mCandlewickDegrees = (int) (-60 * zeroToOne);
                 }
 
             }
         });
         mCandlesAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        mCandlesAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+                mFlame.setmCurX(mCandlewickPoint.x - 25);
+                mCandlewickDegrees = -60;
+            }
+        });
         mCandlesAnimator.start();
     }
 
@@ -107,7 +124,7 @@ public class FirCandle extends ICandle {
         } else {
             mPaint.setColor(Color.parseColor("#55ff5777"));
         }
-        mPaint.setStrokeWidth(5 * 3);
+        mPaint.setStrokeWidth(15);
         mPaint.setStyle(Paint.Style.FILL);
         canvas.drawRect(mCenterX - mCandleWidth / 2, mCurY - mCandleHeight, mCenterX + mCandleWidth / 2, mCurY, mPaint);
 
@@ -134,8 +151,11 @@ public class FirCandle extends ICandle {
         //绘制蜡烛芯
         canvas.save();
         canvas.rotate(mCandlewickDegrees, mCenterX, mCurY - mCandleHeight);
-        canvas.drawLine(mCandlewickPoint.x, mCandlewickPoint.y, mCandlewickPoint.x, mCandlewickPoint.y - 50, mPaint);
+        canvas.drawLine(mCandlewickPoint.x, mCandlewickPoint.y, mCandlewickPoint.x, mCandlewickPoint.y - 30, mPaint);
+        //绘制火焰
+        mFlame.drawFlame(canvas);
         canvas.restore();
+
     }
 
 
