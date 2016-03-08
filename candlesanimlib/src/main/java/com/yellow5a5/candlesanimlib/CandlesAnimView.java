@@ -23,6 +23,18 @@ public class CandlesAnimView extends View {
 
     private ValueAnimator mInvalidateAnimator;
 
+    //监听动画结束
+    private StopAnimListener mStopAnimListener;
+
+    public interface StopAnimListener{
+        //结束动画调用后启动的方法。
+        public void OnAnimStop();
+    }
+
+    public void setStopAnimListener(StopAnimListener l){
+        this.mStopAnimListener = l;
+    }
+
     public CandlesAnimView(Context context) {
         this(context, null);
     }
@@ -35,18 +47,19 @@ public class CandlesAnimView extends View {
         super(context, attrs, defStyleAttr);
         mDensity = (int) getResources().getDisplayMetrics().density;
     }
-
-    private void initParameter() {
+    
+    /*
+     初始化
+     */
+    public void initConfig() {
         int relativeX = (int) getTranslationX();
         int relativeY = (int) getTranslationY();
         int width = getMeasuredWidth();
         int height = getMeasuredHeight();
         mAnimControler = new AnimControler(relativeX,relativeY);
         mAnimControler.initControler(width,height);
-    }
-
-    public void initAnim() {
-        //刷新View
+        
+        //16ms刷新Canvas
         mInvalidateAnimator = ValueAnimator.ofInt(0, 1).setDuration(16);
         mInvalidateAnimator.setRepeatCount(ValueAnimator.INFINITE);
         mInvalidateAnimator.addListener(new AnimatorListenerAdapter() {
@@ -56,6 +69,16 @@ public class CandlesAnimView extends View {
             }
         });
         mInvalidateAnimator.start();
+    }
+
+    /*
+     调用Loading结束动画。
+     */
+    public void stopAnim(){
+        mAnimControler.stopAnimation();
+        if(mStopAnimListener != null){
+            mStopAnimListener.OnAnimStop();
+        }
     }
 
     @Override
@@ -85,8 +108,7 @@ public class CandlesAnimView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         if (!mIsInit) {
-            initParameter();
-            initAnim();
+            initConfig();
             mIsInit = true;
         }
         mAnimControler.drawMyView(canvas);

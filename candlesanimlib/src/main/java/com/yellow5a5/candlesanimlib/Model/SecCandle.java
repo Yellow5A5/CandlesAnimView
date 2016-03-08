@@ -1,9 +1,10 @@
 package com.yellow5a5.candlesanimlib.Model;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.EmbossMaskFilter;
 import android.graphics.Paint;
 import android.graphics.Point;
 
@@ -42,6 +43,7 @@ public class SecCandle extends ICandle {
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStrokeWidth(15);
+        mCandleColor = Color.WHITE;
         mEyeLPoint = new Point();
         mEyeRPoint = new Point();
         mCandlewickPoint = new Point();
@@ -93,28 +95,29 @@ public class SecCandle extends ICandle {
                 }
             }
         });
+        mCandlesAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+                if(mIsAnimStoping){
+                    mCandlesAnimator.cancel();
+                }
+            }
+        });
         mCandlesAnimator.setRepeatCount(ValueAnimator.INFINITE);
         mCandlesAnimator.start();
     }
 
-    private void refreshPosition(int offset) {
-        //眼睛间隔距离
-        mEyeDevide = mCandleWidth / 3;
-        //眼睛坐标
-        mEyeLPoint.x = mCurX + mEyeDevide - offset;
-        mEyeLPoint.y = mCurY - mCandleHeight / 10 * 9;
-        mEyeRPoint.x = mCurX + mEyeDevide * 2 - offset;
-        mEyeRPoint.y = mEyeLPoint.y;
-
-        mMouthPoint.y = mCurY - mCandleHeight / 10 * 8;
-        mCandlewickPoint.y = mCurY - mCandleHeight;
+    @Override
+    public void stopAnim() {
+        super.stopAnim();
+        mIsAnimStoping = true;
     }
 
     @Override
     public void drawSelf(Canvas canvas) {
         super.drawSelf(canvas);
         //绘制身体颜色
-        mPaint.setColor(Color.WHITE);
+        mPaint.setColor(mCandleColor);
         mPaint.setStyle(Paint.Style.FILL);
         canvas.drawRect(mCenterX - mCandleWidth / 2, mCurY - mCandleHeight, mCenterX + mCandleWidth / 2, mCurY, mPaint);
 
@@ -131,5 +134,18 @@ public class SecCandle extends ICandle {
 
         //绘制蜡烛芯
         canvas.drawLine(mCandlewickPoint.x, mCandlewickPoint.y, mCandlewickPoint.x, mCandlewickPoint.y - 30, mPaint);
+    }
+
+    private void refreshPosition(int offset) {
+        //眼睛间隔距离
+        mEyeDevide = mCandleWidth / 3;
+        //眼睛坐标
+        mEyeLPoint.x = mCurX + mEyeDevide - offset;
+        mEyeLPoint.y = mCurY - mCandleHeight / 10 * 9;
+        mEyeRPoint.x = mCurX + mEyeDevide * 2 - offset;
+        mEyeRPoint.y = mEyeLPoint.y;
+
+        mMouthPoint.y = mCurY - mCandleHeight / 10 * 8;
+        mCandlewickPoint.y = mCurY - mCandleHeight;
     }
 }

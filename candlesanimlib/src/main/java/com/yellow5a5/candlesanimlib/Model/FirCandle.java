@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
-import android.util.Log;
 
 /**
  * Created by Weiwu on 16/2/24.
@@ -27,8 +26,23 @@ public class FirCandle extends ICandle {
 
     private Flame mFlame;
     private boolean mIsFire = false;
+    private boolean mIsStateOnStart = false;
+    private boolean mIsStateOnEnd = false;
+    private boolean mFlagStop = false;
 
     private ValueAnimator mCandlesAnimator;
+
+    public interface FlameStateListener {
+        public void flameStart();
+
+        public void flameEnd();
+    }
+
+    private FlameStateListener mFlameStateListener;
+
+    public void setFlameStateListener(FlameStateListener l) {
+        mFlameStateListener = l;
+    }
 
     public FirCandle(int x, int y) {
         super(x, y);
@@ -39,10 +53,10 @@ public class FirCandle extends ICandle {
         super.initCandle(width, height);
         mPreWidth = width;
         mPreHeight = height;
-
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
+        mCandleColor = Color.WHITE;
         mEyeLPoint = new Point();
         mEyeRPoint = new Point();
         mCandlewickPoint = new Point();
@@ -77,14 +91,15 @@ public class FirCandle extends ICandle {
             public void onAnimationUpdate(ValueAnimator animation) {
                 float zeroToOne = (float) animation.getAnimatedValue();
                 if (zeroToOne <= 1.0f) {
+                    //蜡烛芯蓄力下拉
                     mIsFire = true;
                     mCandleWidth = mPreWidth + (int) (zeroToOne * 40);
                     mCandleHeight = mPreHeight - (int) (zeroToOne * 30);
+                    mCandlewickDegrees = (int) (-60 + (180 + 60) * zeroToOne);
                     refreshEyePosition();
-                    //蜡烛芯下拉
-                    mCandlewickDegrees = (int) (- 60 + (180 + 60) * zeroToOne);
                 } else if (zeroToOne <= 2.0f) {
                     zeroToOne = zeroToOne - 1.0f;
+                    //蜡烛芯上摆
                     if (zeroToOne <= 0.2f) {
                         zeroToOne = 1.0f - 5 * zeroToOne;
                         mIsFire = false;
@@ -92,27 +107,50 @@ public class FirCandle extends ICandle {
                         mCandleHeight = mPreHeight - (int) (zeroToOne * 30);
                         mCandlewickDegrees = (int) (180 * zeroToOne);
                     } else {
+                        if (mFlameStateListener != null && !mIsStateOnStart) {
+                            mFlameStateListener.flameStart();
+                            mIsStateOnStart = true;
+                        }
                         mCandleWidth = mPreWidth;
                         mCandleHeight = mPreHeight;
                         mCandlewickDegrees = 0;
+                        if(mFlagStop){
+                            mCandlesAnimator.cancel();
+                        }
                     }
                     refreshEyePosition();
                 } else if (zeroToOne >= 3.5f) {
+                    //蜡烛芯被吹歪
                     zeroToOne = 2 * (zeroToOne - 3.5f);//0-1
                     mCandlewickDegrees = (int) (-60 * zeroToOne);
+                    if(mFlameStateListener != null && !mIsStateOnEnd){
+                        mFlameStateListener.flameEnd();
+                        mIsStateOnEnd = true;
+                    }
                 }
-
             }
         });
         mCandlesAnimator.setRepeatCount(ValueAnimator.INFINITE);
         mCandlesAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationRepeat(Animator animation) {
+                mIsStateOnStart = false;
+                mIsStateOnEnd = false;
                 mFlame.setmCurX(mCandlewickPoint.x - 25);
                 mCandlewickDegrees = -60;
+                if(mIsAnimStoping){
+                    mFlagStop = true;
+                }
             }
         });
         mCandlesAnimator.start();
+    }
+
+    @Override
+    public void stopAnim() {
+        super.stopAnim();
+        mFlame.stopFlame();
+        mIsAnimStoping = true;
     }
 
     @Override
@@ -120,7 +158,7 @@ public class FirCandle extends ICandle {
         super.drawSelf(canvas);
         //绘制身体颜色
         if (!mIsFire) {
-            mPaint.setColor(Color.WHITE);
+            mPaint.setColor(mCandleColor);
         } else {
             mPaint.setColor(Color.parseColor("#55ff5777"));
         }
@@ -155,9 +193,7 @@ public class FirCandle extends ICandle {
         //绘制火焰
         mFlame.drawFlame(canvas);
         canvas.restore();
-
     }
-
 
     private void refreshEyePosition() {
         mEyeDevide = mCandleWidth / 3;

@@ -5,14 +5,12 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.EmbossMaskFilter;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.RadialGradient;
 import android.graphics.Shader;
-import android.graphics.SweepGradient;
 
 import java.util.Random;
 
@@ -34,6 +32,8 @@ public class Flame {
     private int mHeight;
     //记录初始高度
     private int mPreHeight;
+    //记录初始宽度
+    private int mPreWidth;
     //火焰顶部贝塞尔曲线控制点变化参数
     private int mTopXFactor;
     private int mTopYFactor;
@@ -47,9 +47,14 @@ public class Flame {
     private int mHaloRadius;
     //正在燃烧
     private boolean mIsFiring;
+    //是否启动停止动画
+    private boolean mIsStopAnim = false;
+    private boolean mFlagStop = false;
     private LinearGradient mLinearGradient;
+    private RadialGradient mRadialGradient;
 
     private ValueAnimator mFlameAnimator;
+    private ValueAnimator mHaloAnimator;
 
 
     public int getmCurY() {
@@ -81,13 +86,15 @@ public class Flame {
         mRandom = new Random();
         mSmokePoint = new Point();
         mWidth = width;
+        mPreWidth = width;
         mHeight = 0;
         mPreHeight = height;
+        mHaloRadius = 70;
         mLinearGradient = new LinearGradient(mCurX + mWidth / 2, mCurY + mPreHeight / 3, mCurX + mWidth / 2, mCurY - mPreHeight / 3 * 4, Color.YELLOW, Color.RED, Shader.TileMode.REPEAT);
-        mPaint.setShader(mLinearGradient);
+        mRadialGradient = new RadialGradient(mCurX + mWidth / 2, mCurY - mPreHeight / 2, mHaloRadius,
+                new int[]{Color.WHITE, Color.TRANSPARENT}, null, Shader.TileMode.REPEAT);
         mSmokePoint.x = mCurX - 20;
         mSmokePoint.y = mCurY - 20;
-        mHaloRadius = 70;
     }
 
     public void initAnim() {
@@ -97,19 +104,21 @@ public class Flame {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float zeroToOne = (float) animation.getAnimatedValue();
-                if (mIsFiring) {
-                    mHaloRadius = (int) (70 + zeroToOne % 1.0f * 20);
-                }
                 if (zeroToOne >= 1.0f && zeroToOne <= 1.2f) {
                     //火焰燃起
                     zeroToOne = 1.0f - 5 * (zeroToOne - 1.0f);//1-0
                     mHeight = (int) (mPreHeight * (1 - zeroToOne));
                     mIsFiring = true;
                 } else if (zeroToOne >= 3.5f) {
+                    if (mFlagStop) {
+                        mFlameAnimator.cancel();
+                        return;
+                    }
                     //火焰被吹灭
-                    zeroToOne = 2 * (zeroToOne - 3.0f);
-                    mTopXFactor = (int) (10 * zeroToOne);
-                    mTopYFactor = (int) (80 * zeroToOne);
+                    zeroToOne = 2 * (zeroToOne - 3.5f);//0-2
+                    mTopXFactor = (int) (-20 * zeroToOne);
+                    mTopYFactor = (int) (160 * zeroToOne);
+//                    mWidth = (int) (mPreWidth * (1 -zeroToOne));
                     mIsFiring = false;
                 }
             }
@@ -117,12 +126,32 @@ public class Flame {
         mFlameAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationRepeat(Animator animation) {
+                if (mIsStopAnim) {
+                    mFlagStop = true;
+                }
                 mTopXFactor = 0;
                 mTopYFactor = 0;
                 mHeight = 0;
+                mWidth = mPreWidth;
             }
         });
+        mHaloAnimator = ValueAnimator.ofFloat(0, 1).setDuration(500);
+        mHaloAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        mHaloAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float zeroToOne = (float) animation.getAnimatedValue();
+                if (mIsFiring) {
+                    mHaloRadius = (int) (70 + zeroToOne % 1.0f * 20);
+                }
+            }
+        });
+        mHaloAnimator.start();
         mFlameAnimator.start();
+    }
+
+    public void stopFlame() {
+        mIsStopAnim = true;
     }
 
     public void drawFlame(Canvas canvas) {
@@ -131,18 +160,17 @@ public class Flame {
         mPath.reset();
         mPath.moveTo(mCurX, mCurY);
         mPath.quadTo(mCurX + mWidth / 2, mCurY + mHeight / 3, mCurX + mWidth, mCurY);
-        mPath.quadTo(mCurX + mWidth / 2 + ((1 - mRandom.nextFloat()) * CHANGE_FACTOR) - mTopXFactor, mCurY - 2 * mHeight + mTopYFactor, mCurX, mCurY);
+        mPath.quadTo(mCurX + mWidth / 2 + ((1 - mRandom.nextFloat()) * CHANGE_FACTOR) + mTopXFactor, mCurY - 2 * mHeight + mTopYFactor, mCurX, mCurY);
 
         canvas.drawPath(mPath, mPaint);
 
         if (mIsFiring) {
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setStrokeWidth(5);
-            mPaint.setShader(new RadialGradient(mCurX + mWidth / 2, mCurY - mHeight / 2, mHaloRadius,
-                    new int[]{Color.WHITE, Color.TRANSPARENT}, null, Shader.TileMode.REPEAT));
+            mPaint.setShader(mRadialGradient);
             canvas.drawCircle(mCurX + mWidth / 2, mCurY - mHeight / 2, mHaloRadius, mPaint);
-            canvas.drawCircle(mCurX + mWidth / 2, mCurY - mHeight / 2, mHaloRadius - 3, mPaint);
-            canvas.drawCircle(mCurX + mWidth / 2, mCurY - mHeight / 2, mHaloRadius - 6, mPaint);
+            canvas.drawCircle(mCurX + mWidth / 2, mCurY - mHeight / 2, mHaloRadius + 5, mPaint);
+            canvas.drawCircle(mCurX + mWidth / 2, mCurY - mHeight / 2, mHaloRadius - 5, mPaint);
         }
     }
 }

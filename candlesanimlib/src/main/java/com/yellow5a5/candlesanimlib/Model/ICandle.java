@@ -22,10 +22,12 @@ public abstract class ICandle {
     protected int mEyeRadius;
     //眼睛间隔距离
     protected int mEyeDevide;
-
+    //身体颜色
+    protected int mCandleColor;
+    //是否停止动画中
+    protected boolean mIsAnimStoping = false;
     //蜡烛芯远坐标
     protected Point mCandlewickPoint;
-
     public ICandle(int x, int y){
         mCurX = x;
         mCurY = y;
@@ -38,7 +40,11 @@ public abstract class ICandle {
 
     public void initAnim(){
 
-    };
+    }
+
+    public void stopAnim(){
+
+    }
 
     public void drawSelf(Canvas canvas){
 
@@ -66,5 +72,9 @@ public abstract class ICandle {
 
     public void setCandleHeight(int mCandleHeight) {
         this.mCandleHeight = mCandleHeight;
+    }
+
+    public void setCandleColor(int mCandleColor) {
+        this.mCandleColor = mCandleColor;
     }
 }

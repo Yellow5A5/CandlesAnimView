@@ -1,10 +1,10 @@
 package com.yellow5a5.candlesanimlib;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 
 import com.yellow5a5.candlesanimlib.Model.FirCandle;
-import com.yellow5a5.candlesanimlib.Model.ICandle;
 import com.yellow5a5.candlesanimlib.Model.SecCandle;
 
 /**
@@ -14,8 +14,8 @@ public class AnimControler {
 
     private Paint mPaint;
 
-    private ICandle mFirCandle;
-    private ICandle mSecCandle;
+    private FirCandle mFirCandle;
+    private SecCandle mSecCandle;
 
     private int mWidth;
     private int mHeight;
@@ -30,15 +30,18 @@ public class AnimControler {
     private int mFirCandleWidth;
     private int mSecCandleWidth;
 
-    public AnimControler(int x, int y){
+    private boolean mIsNight;
+
+    public AnimControler(int x, int y) {
         mRelativeX = x;
         mRelativeY = y;
     }
 
-    public void initControler(int width,int height){
+    public void initControler(int width, int height) {
         mWidth = width;
         mHeight = height;
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaint.setStyle(Paint.Style.FILL);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStrokeWidth(15);
@@ -54,10 +57,29 @@ public class AnimControler {
         mSecCandle = new SecCandle(mRelativeX + mWidth / 2, mRelativeY + mHeight);
         mSecCandle.initCandle(mSecCandleWidth, mSecCandleHeight - 80);
         mSecCandle.initAnim();
+
+        mFirCandle.setFlameStateListener(new FirCandle.FlameStateListener() {
+            @Override
+            public void flameStart() {
+                mIsNight = false;
+                //Maybe you can add the other animation or event.
+            }
+            @Override
+            public void flameEnd() {
+                mIsNight = true;
+            }
+        });
     }
 
-    public void drawMyView(Canvas canvas){
+    public void stopAnimation(){
+        mFirCandle.stopAnim();
+        mSecCandle.stopAnim();
+    }
+
+    public void drawMyView(Canvas canvas) {
+        mPaint.setColor(Color.BLACK);
         mFirCandle.drawSelf(canvas);
+
         mSecCandle.drawSelf(canvas);
         canvas.drawLine(mRelativeX, mRelativeY + mHeight, mRelativeX + mWidth, mRelativeY + mHeight, mPaint);
     }

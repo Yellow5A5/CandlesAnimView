@@ -11,6 +11,7 @@
     tools:context="com.yellow5a5.candlesanim.MainActivity">
 
     <com.yellow5a5.candlesanimlib.CandlesAnimView
+        android:id="@+id/candles_view"
         android:layout_centerInParent="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
